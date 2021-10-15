@@ -5,11 +5,6 @@ Một api đơn giản để định cấu hình và nâng cao các cách mã h�
 
 <div align="center">
   <p>
-<a href="https://discord.gg/ebNaUumRPB" ><img src="https://discordapp.com/api/guilds/858607369767878676/widget.png?style=banner1" alt="Discord Banner 4"/></a>
-  </p>
-</div>
-<div align="center">
-  <p>
     <a href="https://nodei.co/npm/modelvnn-package
 /"><img src="https://nodei.co/npm/modelvnn-package.png?downloads=true&stars=true" alt="NPM info" /></a>
   </p>
