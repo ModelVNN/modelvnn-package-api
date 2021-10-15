@@ -1,8 +1,11 @@
 {
   "name": "modelvnn-package",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "license": "MIT",
   "author": "ModelVNN",
   "repository": {
