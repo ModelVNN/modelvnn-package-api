@@ -1,40 +1,33 @@
 {
   "name": "modelvnn-package",
-  "version": "1.0.3",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
-  "license": "MIT",
-  "author": "ModelVNN",
+  "version": "1.0.1",
+  "description": "một package tiếng Việt do ModelVNN tạo ra",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ModelDev",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^13.0.1",
+    "jsdom": "^16.4.0",
+    "mongoose": "^5.10.15",
+    "ms": "^2.1.2"
+  },
+  "types": "index.d.ts",
+  "devDependencies": {},
   "repository": {
+    "type": "git",
     "url": "git+https://github.com/ModelVNN/modelvnn-package-api.git"
   },
-  "engines": {
-    "node": ">=16.6.0"
-  },
-  "scripts": {
-    "build": "tsc",
-    "docs": "npx typedoc src/index.ts --excludePrivate",
-    "test": "ts-node tests/index.ts"
-  },
-  "dependencies": {
-    "axios": "^0.21.1",
-    "jsdom": "^16.7.0",
-    "sourcebin": "^4.2.5"
-  },
-  "devDependencies": {
-    "@types/jsdom": "^16.2.13",
-    "discord.js": "^13.2.0",
-    "mongoose": "^6.0.9",
-    "ts-node": "^10.2.0",
-    "typedoc": "^0.21.2",
-    "typescript": "^4.3.5"
-  },
+  "keywords": [
+    "discord.js",
+    "modelVNN",
+    "ModelDev",
+    "discord-buttons"
+  ],
   "bugs": {
     "url": "https://github.com/ModelVNN/modelvnn-package-api/issues"
   },
-  "homepage": "https://github.com/ModelVNN/modelvnn-package-api#readme",
-  "description": ""
+  "homepage": "https://github.com/ModelVNN/modelvnn-package-api#readme"
 }

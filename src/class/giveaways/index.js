@@ -1,99 +1,74 @@
-import mongoose from "mongoose";
-import {
+const {
     Client,
-    Collection,
-    ColorResolvable,
     MessageEmbed,
-    TextChannel,
     User,
-} from "discord.js";
-import {
-    GiveawayClientOptions,
-    GiveawayClientSchema,
-    StartOptions,
-} from "./giveaways.interfaces";
-
-export class GiveawayClient {
-    public schema = mongoose.model<GiveawayClientSchema>(
-        "reconlx-giveaways",
-        new mongoose.Schema({
-            MessageID: String,
-            EndsAt: Number,
-            Guild: String,
-            Channel: String,
-            winners: Number,
-            prize: String,
-            description: String,
-            hostedBy: String,
-            Activated: Boolean,
-        })
-    );
-    public options: GiveawayClientOptions;
-    public collection: Collection<string, GiveawayClientSchema> =
-        new Collection();
-
+    TextChannel,
+    Collection,
+    Message,
+} = require("discord.js");
+const mongoose = require("mongoose");
+const GiveawaySchema = require("./schema");
+class GiveawayClient {
     /**
      * @name GiveawayClient
      * @kind constructor
-     * @description Initialzing the giveaway client
+     * @param {Client} client
+     * @param {Object} options Options
+     * @param {String} [options.mongoURI] mongodb connection string
+     * @param {String} [options.emoji] emoji for reaction (must be a unicode)
+     * @param {String} [options.defaultColor] default colors for giveaway embeds
+     * @description Initiating the giveaway client
      */
-    constructor(options: GiveawayClientOptions) {
-        const { client, mongooseConnectionString, defaultColor, emoji } =
-            options;
 
+    constructor(client, options) {
+        if (!client) throw new Error("Client cần phải có args");
+        this.client = client;
+        this.collection = new Collection();
         if (mongoose.connection.readyState !== 1) {
-            if (!options.mongooseConnectionString)
+            if (!options.mongoURI)
                 throw new Error(
-                    "Không có kết nối được thiết lập với mongoose và kết nối mongoose là bắt buộc!"
+                    "There is no established  connection with mongoose and a mongoose connection is required!"
                 );
-            mongoose.connect(options.mongooseConnectionString, {
-                useUnifiedTopology: true,
-                useNewUrlParser: true,
-            });
+            mongoose.connect(options.mongoURI);
         }
-        this.options = {
-            client,
-            mongooseConnectionString,
-            defaultColor: defaultColor || "#FF0000",
-            emoji: emoji || "🎉",
-        };
-
-        this.ready();
+        this.emoji = options.emoji || "🎉";
+        this.defaultColor = options.defaultColor || "FF0000";
+        this.client.on("ready", () => this.ready());
     }
-
-    private ready() {
-        this.schema.find().then((data) => {
-            if (!data?.length) return;
-            data.forEach((value) => {
-                this.collection.set(value.MessageID, value);
-            });
-        });
-
-        this.checkWinners();
-    }
-
     /**
      * @method
-     * @description Starts a giveaway
+     * @param {Object} options options
+     * @param {TextChannel} [options.channel] Channel for the giveaway to be in
+     * @param {Number} [options.time] Duration of this giveaway
+     * @param {User} [options.hostedBy] Person that hosted the giveaway
+     * @param {String} [options.description] Description of the giveaway
+     * @param {Number} [options.winners] Amount of winners for the giveaway
+     * @param {String} [options.prize] Prize for the  giveaway
      */
-    public start(options: StartOptions) {
-        const { channel, time, winners, prize, description, hostedBy } =
-            options;
+    start(options) {
+        const {
+            channel,
+            time,
+            winners,
+            prize,
+            description,
+            hostedBy,
+        } = options;
         const desc = [
-            `Giveaway ends at ${new Date(
+            `Giveaway kết thúc trong ${new Date(
                 Date.now() + time
-            ).toLocaleString()}\n` + `Tổ chức bởi: ${hostedBy}`,
+            ).toLocaleString()}\n` + `Tạo bởi: ${hostedBy}`,
         ];
-        if (description) desc.push(`Miêu tả: ${description}`);
+        if (description) desc.push(`chú thích: ${description}`);
         const embed = new MessageEmbed()
             .setTitle(`${prize}`)
             .setDescription(desc.join("\n"))
             .setFooter(`${winners} đã thắng!`)
-            .setColor(this.options.defaultColor)
+            .setColor(this.defaultColor)
             .setTimestamp();
 
         channel.send({ embeds: [embed] }).then((msg) => {
-            msg.react(this.options.emoji);
+            msg.react(this.emoji);
             const values = {
                 MessageID: msg.id,
                 EndsAt: Date.now() + time,
@@ -105,30 +80,30 @@ export class GiveawayClient {
                 hostedBy: hostedBy.id,
                 Activated: true,
             };
-            const newGiveawaySchema = new this.schema(values);
+            const newGiveawaySchema = new GiveawaySchema(values);
 
             newGiveawaySchema.save();
             this.collection.set(values.MessageID, values);
         });
     }
-
     /**
      * @method
      * @param {String} MessageID Message ID for the giveaway
      * @param {Boolean} getWinner Choose a winner?
      * @description End a giveaway, choose a winner (optional)
      */
-    end(MessageID: string, getWinner: boolean) {
-        this.schema.findOne(
+
+    end(MessageID, getWinner) {
+        GiveawaySchema.findOne(
             { MessageID, Activated: true },
             async (err, data) => {
-                const giveawayChannel = this.options.client.channels.cache.get(
+                const giveawayChannel = this.client.channels.cache.get(
                     data.Channel
                 );
                 if (err) throw err;
                 if (!data)
                     throw new Error(
-                        "Không có quà tặng nào hiện đang chạy với " +
+                        "Không có giveaway nào đang hoạt động " +
                             MessageID +
                             " id"
                     );
@@ -137,11 +112,11 @@ export class GiveawayClient {
                         data.Channel,
                         data.MessageID,
                         data.winners
-                    ).then((reactions: any) => {
+                    ).then((reactions) => {
                         const winners = reactions
                             .map((user) => user)
                             .join(", ");
-                        (giveawayChannel as TextChannel).send(
+                        giveawayChannel.send(
                             `Chúc mừng ${winners} bạn đã thắng **${data.prize}**`
                         );
                     });
@@ -150,11 +125,7 @@ export class GiveawayClient {
                         data.Channel,
                         data.MessageID
                     );
-                    oldMessage.edit({
-                        embeds: [
-                            new MessageEmbed().setTitle("Giveaway kết thúc!"),
-                        ],
-                    });
+                    oldMessage.edit({ embeds: [new MessageEmbed().setTitle("Giveaway kết thúc!")] });
                 }
                 data.Activated = false;
                 data.save();
@@ -162,12 +133,14 @@ export class GiveawayClient {
             }
         );
     }
-
     /**
      * @method
-     * @description Picks a new winner!
+     * @param {String} channel channel of the giveaway
+     * @param {String} id message id
+     * @param {Number} winners amount of winners
+     * @description Change the winners for a giveaway!
      */
-    public reroll(MessageID: string) {
+    reroll(MessageID) {
         return new Promise((ful, rej) => {
             const filtered = this.collection.filter(
                 (value) => value.Activated === false
@@ -177,7 +150,7 @@ export class GiveawayClient {
                 rej("Giveaway không tồn tại hoặc chưa kết thúc");
             const giveawayChannel = this.getChannel(data.Channel);
             this.getReactions(data.Channel, MessageID, data.winners).then(
-                (reactions: any) => {
+                (reactions) => {
                     const winner = reactions.map((user) => user).join(", ");
                     giveawayChannel.send(
                         `Giveway đã được cuộn lại, ${winner} ${
@@ -188,7 +161,6 @@ export class GiveawayClient {
             );
         });
     }
-
     /**
      * @method
      * @param {Boolean} activatedOnly display activated giveaways only?
@@ -196,7 +168,7 @@ export class GiveawayClient {
      * @param {Message} message message if (all = false)
      * @description Get data on current giveaways hosted by the bot
      */
-    public getCurrentGiveaways(activatedOnly = true, all = false, message) {
+    getCurrentGiveaways(activatedOnly = true, all = false, message) {
         return new Promise((ful, rej) => {
             if (all) {
                 if (activatedOnly) {
@@ -227,62 +199,20 @@ export class GiveawayClient {
         });
     }
 
-    /**
-     * @method
-     * @param {Boolean} all Get data from all guilds?
-     * @param {String} guildID guild id if all=false
-     * @description Removes (activated = false) giveaways
-     */
-    public removeCachedGiveaways(all = false, guildID) {
-        if (!all) {
-            this.schema.find(
-                { Guild: guildID, Activated: false },
-                async (err, data) => {
-                    if (err) throw err;
-                    if (data)
-                        data.forEach((data: any) => {
-                            data.delete();
-                        });
-                }
-            );
-            const filtered = this.collection.filter(
-                (value) => value.Activated === false && value.Guild === guildID
-            );
-            filtered.forEach((value) => {
-                this.collection.delete(value.MessageID);
-            });
-        } else {
-            this.schema.find({ Activated: false }, async (err, data) => {
-                if (err) throw err;
-                if (data)
-                    data.forEach((data: any) => {
-                        data.delete();
-                    });
-            });
-            const filtered = this.collection.filter(
-                (value) => value.Activated === false
-            );
-            filtered.forEach((value) => {
-                this.collection.delete(value.MessageID);
-            });
-        }
-    }
-
-    private getReactions(channelID, messageID, amount) {
+    getReactions(channelID, messageID, amount) {
         return new Promise((ful, rej) => {
-            (
-                this.options.client.channels.cache.get(channelID) as TextChannel
-            ).messages
-                .fetch(messageID)
+            this.client.channels.cache
+                .get(channelID)
+                .messages.fetch(messageID)
                 .then((msg) => {
                     msg.reactions.cache
-                        .get(this.options.emoji)
+                        .get(this.emoji)
                         .users.fetch()
                         .then((users) => {
                             const real = users.filter((user) => !user.bot);
                             if (amount && !real.size >= amount)
                                 rej(
-                                    "Phản ứng không đủ, người chiến thắng không được quyết định"
+                                    "Reactions không đủ, người chiến thắng không được quyết định"
                                 );
                             ful(real.random(amount));
                         });
@@ -290,17 +220,18 @@ export class GiveawayClient {
         });
     }
 
-    private getMessage(channel, message) {
-        return (
-            this.options.client.channels.cache.get(channel) as TextChannel
-        ).messages.fetch(message);
+    ready() {
+        GiveawaySchema.find({}).then((data) => {
+            if (data.length === 0) return;
+            data.forEach((value) => {
+                this.collection.set(value.MessageID, value);
+            });
+        });
+
+        this.checkWinners();
     }
 
-    private getChannel(value) {
-        return this.options.client.channels.cache.get(value) as TextChannel;
-    }
-
-    private checkWinners() {
+    checkWinners() {
         setInterval(() => {
             const endedGiveaways = this.collection.filter(
                 (value) => value.EndsAt < Date.now() && value.Activated === true
@@ -314,12 +245,12 @@ export class GiveawayClient {
                     giveaway.MessageID,
                     giveaway.winners
                 )
-                    .then((reactions: any) => {
+                    .then((reactions) => {
                         const winners = reactions
                             .map((user) => user)
                             .join(", ");
                         giveawayChannel.send(
-                            `Congrats ${winners} you have won **${giveaway.prize}**`
+                            `Chúc mừng ${winners} đã thắng **${giveaway.prize}**`
                         );
                     })
                     .catch((err) => {
@@ -331,18 +262,66 @@ export class GiveawayClient {
                     giveaway.Channel,
                     giveaway.MessageID
                 );
-                oldMessage.edit({
-                    embeds: [new MessageEmbed().setTitle("Giveaway kết thúc!")],
-                });
+                oldMessage.edit({ embeds: [new MessageEmbed().setTitle("Giveaway kết thúc!")] });
                 this.collection.get(giveaway.MessageID).Activated = false;
                 const props = {
                     MessageID: giveaway.MessageID,
                     Activated: true,
                 };
-                const data = await this.schema.findOne(props);
+                const data = await GiveawaySchema.findOne(props);
                 if (data) data.Activated = false;
                 data.save();
             });
         }, 5000);
     }
+    /**
+     * @method
+     * @param {Boolean} all Get data from all guilds?
+     * @param {String} guildID guild id if all=false
+     * @description Removes (activated = false) giveaways
+     */
+    removeCachedGiveaways(all = false, guildID) {
+        if (!all) {
+            GiveawaySchema.find(
+                { Guild: guildID, Activated: false },
+                async (err, data) => {
+                    if (err) throw err;
+                    if (data)
+                        data.forEach((data) => {
+                            data.delete();
+                        });
+                }
+            );
+            const filtered = this.collection.filter(
+                (value) => value.Activated === false && value.Guild === guildID
+            );
+            filtered.forEach((value) => {
+                this.collection.delete(value.MessageID);
+            });
+        } else {
+            GiveawaySchema.find({ Activated: false }, async (err, data) => {
+                if (err) throw err;
+                if (data)
+                    data.forEach((data) => {
+                        data.delete();
+                    });
+            });
+            const filtered = this.collection.filter(
+                (value) => value.Activated === false
+            );
+            filtered.forEach((value) => {
+                this.collection.delete(value.MessageID);
+            });
+        }
+    }
+
+    getChannel(value) {
+        return this.client.channels.cache.get(value);
+    }
+
+    getMessage(channel, message) {
+        return this.client.channels.cache.get(channel).messages.fetch(message);
+    }
 }
+
+module.exports = GiveawayClient;
