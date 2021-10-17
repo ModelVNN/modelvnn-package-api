@@ -1,12 +1,16 @@
-# modelvnn-package-api
+# modelvnn-api
 một package tiếng Việt do ModelVNN tạo ra
+## Server
+Tham gia server của tui -> https://discord.io/peachlovervietnam
+
+## Info
 
 Một api đơn giản để định cấu hình và nâng cao các cách mã hóa bot bất hòa của bạn. Tương thích với discord.js v13.
 
 <div align="center">
   <p>
-    <a href="https://nodei.co/npm/modelvnn-package
-/"><img src="https://nodei.co/npm/modelvnn-package.png?downloads=true&stars=true" alt="NPM info" /></a>
+    <a href="https://nodei.co/npm/modelvnn
+/"><img src="https://nodei.co/npm/modelvnn.png?downloads=true&stars=true" alt="NPM info" /></a>
   </p>
 </div>
 
@@ -25,15 +29,15 @@ nhiều tính năng sắp ra mắt! (hoặc tui lười tui ko lm nx :v)
 
 ```javascript
 // Dùng Node.js `require()`
-const modelpack = require("modelvnn-package");
+const modelpack = require("modelvnn");
 ............
 // Dùng ES6 import
-import modelpack from "modelvnn-package";
+import modelpack from "modelvnn";
 ```
 
 ## 🙋‍♂️ Support
 
-Hãy tham gia máy chủ hỗ trợ discord -> https://discord.io/peachlovervietnam
+Tham gia server này để được hỗ trợ -> https://discord.io/ModelDev
 
 ---
 
@@ -46,7 +50,7 @@ Hãy tham gia máy chủ hỗ trợ discord -> https://discord.io/peachloverviet
 #### Ví dụ :
 
 ```js
-const modelpack = require("modelvnn-package");
+const modelpack = require("modelvnn");
 const ReactionPages = modelpack.ReactionPages;
 
 const { MessageEmbed } = require("discord.js");
@@ -75,7 +79,7 @@ ReactionPages(msg, pages, textPageChange, emojis, time);
 ## Confirmation
 
 ```js
-const { confirmation } = require("modelvnn-package");
+const { confirmation } = require("modelvnn");
 message.channel.send("Confirmation for banning members").then(async (msg) => {
     const emoji = await confirmation(msg, ["✅", "❌"], 30000);
     if (emoji === "✅") {
@@ -93,7 +97,7 @@ message.channel.send("Confirmation for banning members").then(async (msg) => {
 ## timeout
 
 ```js
-const { timeout } = require("modelvnn-package");
+const { timeout } = require("modelvnn");
 
 // ví dụ
 
@@ -111,7 +115,7 @@ timeout(message, messageToDelete, 5000);
 ## chatBot
 
 ```js
-const { chatBot } = require("modelvnn-package");
+const { chatBot } = require("modelvnn");
 
 /** @parameters
  * message, message.channel
@@ -132,7 +136,7 @@ chatBot(message, args.join(" "));
 
 ```js
 //importing
-const { tictactoe } = require("modelvnn-package");
+const { tictactoe } = require("modelvnn");
 
 // parameters
 /**
@@ -165,7 +169,7 @@ var game = new tictactoe({
 ```js
 const Discord = require('discord.js')
 const client = new Discord.Client();
-const { GiveawayClient } = require("modelvnn-package");
+const { GiveawayClient } = require("modelvnn");
 
   /**
    * @name GiveawayClient
@@ -255,9 +259,9 @@ module.exports = giveaway;
 ## 1. Importing the package
 
 ```js
-const { modelvnnDB } = require("modelvnn-package");
+const { modelvnnDB } = require("modelvnn");
 // or
-import { modelvnnDB } from "modelvnn-package";
+import { modelvnnDB } from "modelvnn";
 ```
 
 ## 2. Establishing and exporting modelvnnDB

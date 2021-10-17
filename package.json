@@ -1,6 +1,6 @@
 {
-  "name": "modelvnn-package",
-  "version": "1.0.1",
+  "name": "modelvnn",
+  "version": "1.0.3",
   "description": "một package tiếng Việt do ModelVNN tạo ra",
   "main": "index.js",
   "scripts": {
